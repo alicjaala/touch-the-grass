@@ -2,6 +2,7 @@ import asyncio
 import json
 import websockets
 from threading import Thread
+from transmitter import *
 
 class DataTransmitter:
     def __init__(self, host="localhost", port=8765):

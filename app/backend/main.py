@@ -52,7 +52,7 @@ def main():
 
                 # 5. Logowanie w konsoli
                 bar = "|" * int(result['focus_percent'] / 5)
-                print(f"Stan: {result['state']:<15} | Focus: {result['focus_percent']:5.1f}% [{bar:<20}]")
+                print(f"Focus: {result['focus_percent']:5.1f}% [{bar:<20}]")
 
                 # 6. Wysyłka na frontend (Komunikacja)
                 transmitter.send_data(result)
