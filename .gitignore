@@ -38,13 +38,6 @@ Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# --- PROJEKT BRAINACCESS (Specyficzne dla Was) ---
-*.csv
-*.edf
-*.txt
-recorded_data/
-logs/
-
 # --- BEZPIECZEŃSTWO ---
 .env
 secrets.json
