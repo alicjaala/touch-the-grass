@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { width: 300px; font-family: 'Segoe UI', sans-serif; padding: 15px; background: #fff; }
+        h2 { text-align: center; margin-top: 0; color: #333; }
+        
+        .metric-container { margin-bottom: 20px; }
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
+        
+        .progress-bg {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%; /* To będziemy zmieniać JS-em */
+            transition: width 0.5s ease-in-out, background-color 0.5s;
+        }
+
+        #bar-focus { background-color: #4CAF50; } 
+        #bar-stress { background-color: #F44336; } 
+    </style>
+</head>
+<body>
+    <h2>🧠 Brain Monitor</h2>
+
+    <div class="metric-container">
+        <div class="label-row">
+            <span>SKUPIENIE</span>
+            <span id="text-focus">--%</span>
+        </div>
+        <div class="progress-bg">
+            <div id="bar-focus" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <div class="metric-container">
+        <div class="label-row">
+            <span>STRES</span>
+            <span id="text-stress">--%</span>
+        </div>
+        <div class="progress-bg">
+            <div id="bar-stress" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
