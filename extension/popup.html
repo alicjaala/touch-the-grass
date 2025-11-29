@@ -14,11 +14,12 @@
     /* ===== TRYB JASNY (domyślny) ===== */
     body {
       width: 380px;
-      min-height: 480px;
+      min-height: 550px; /* Zwiększyłem lekko wysokość, żeby zmieścił się przycisk */
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
       background: #ffffff;
       color: #1a1a1a;
       overflow-x: hidden;
+      position: relative; /* Ważne dla nakładki */
     }
 
     .metric-card {
@@ -82,6 +83,21 @@
 
       .alert-box .alert-text {
         color: #fca5a5;
+      }
+      
+      /* Ciemny tryb dla kalibracji */
+      #overlay-calibration {
+        background-color: #0d0d0d !important;
+        color: #f5f5f5 !important;
+      }
+      
+      #btn-back {
+        border-color: #444 !important;
+        color: #ccc !important;
+      }
+      
+      #btn-back:hover {
+        background-color: #222 !important;
       }
     }
 
@@ -226,7 +242,7 @@
       padding: 14px 16px;
       text-align: center;
       animation: fadeIn 0.8s ease;
-      margin-top: 4px;
+      margin-top: 15px; /* Zwiększony odstęp */
     }
 
     .status-line {
@@ -250,17 +266,9 @@
       50% { opacity: 0.4; }
     }
 
-    .status-indicator.connected {
-      background-color: #10b981;
-    }
-
-    .status-indicator.disconnected {
-      background-color: #ef4444;
-    }
-
-    .status-indicator.connecting {
-      background-color: #f59e0b;
-    }
+    .status-indicator.connected { background-color: #10b981; }
+    .status-indicator.disconnected { background-color: #ef4444; }
+    .status-indicator.connecting { background-color: #f59e0b; }
 
     .status-text {
       font-size: 12px;
@@ -278,9 +286,7 @@
       display: none;
     }
 
-    .alert-box.show {
-      display: block;
-    }
+    .alert-box.show { display: block; }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -303,6 +309,173 @@
       opacity: 0.5;
       margin-top: 6px;
     }
+
+    /* ===== NOWE STYLE DLA KALIBRACJI ===== */
+    
+    .hidden {
+      display: none !important;
+    }
+
+    /* Główny przycisk na dole */
+    #btn-start-calib {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    }
+
+    #btn-start-calib:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Overlay (Nakładka) */
+    #overlay-calibration {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0,0,0,0.1);
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #btn-back {
+      background: transparent;
+      border: 2px solid #e5e7eb;
+      color: #4b5563;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    #btn-back:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    .sudoku-board {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 1px;
+      background-color: #333; 
+      border: 2px solid #333;
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 1;
+    }
+
+    .sudoku-cell {
+      background: white;
+      border: none;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    .sudoku-cell:focus {
+      background-color: #e3f2fd; 
+    }
+
+    .sudoku-cell[disabled] {
+      background-color: #f0f0f0;
+      color: #000;
+    }
+
+    .sudoku-cell:nth-child(3n) {
+      border-right: 2px solid #333;
+    }
+    .sudoku-cell:nth-child(9n) {
+      border-right: none; 
+    }
+
+    .calib-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .calib-card {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 16px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calib-card:hover {
+      border-color: #2196F3;
+      transform: translateY(-3px);
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+    }
+
+    .calib-icon { font-size: 32px; margin-bottom: 8px; }
+    .calib-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .calib-desc { font-size: 10px; opacity: 0.6; }
+
+    .video-container {
+      width: 100%;
+      height: 350px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      .calib-card { background: #1a1a1a; border-color: #333; color: #fff; }
+      .calib-card:hover { border-color: #2196F3; background: #222; }
+    }
+
+
   </style>
 </head>
 <body>
@@ -344,6 +517,10 @@
       </div>
     </div>
 
+    <button id="btn-start-calib">
+      <span>⚙️</span> Rozpocznij Kalibrację
+    </button>
+
     <div class="status-footer">
       <div class="status-line">
         <span id="status-indicator" class="status-indicator connecting"></span>
@@ -354,6 +531,74 @@
         📬 Test powiadomienia
       </button>
     </div>
+  </div>
+
+  <div id="overlay-calibration" class="hidden">
+    
+    <div id="calib-step-menu">
+      <h2 style="margin-bottom: 20px; font-weight: 700;">Wybierz tryb kalibracji</h2>
+      <p style="opacity: 0.7; margin-bottom: 30px;">Co chcesz teraz robić?</p>
+      
+      <div class="calib-options">
+        <button id="btn-choose-sudoku" class="calib-card">
+          <div class="calib-icon">🧩</div>
+          <div class="calib-title">Logika (Sudoku)</div>
+          <div class="calib-desc">Maksymalne skupienie</div>
+        </button>
+
+        <button id="btn-choose-brainrot" class="calib-card">
+          <div class="calib-icon">😵‍💫</div>
+          <div class="calib-title">Brainrot</div>
+          <div class="calib-desc">Totalny odmóżdżacz</div>
+        </button>
+      </div>
+
+      <button id="btn-back-main" style="margin-top: 30px; background: transparent; border: none; color: #666; cursor: pointer;">
+        Anuluj
+      </button>
+    </div>
+
+    <div id="calib-step-sudoku" class="hidden">
+      <div style="font-size: 30px;">🧩</div>
+      <h3>Sudoku Focus</h3>
+      
+      <div id="sudoku-board" class="sudoku-board" style="margin: 15px auto;"></div>
+      
+      <button id="btn-finish-sudoku" style="background-color: #4CAF50; width: 100%; padding: 10px; border: none; color: white; border-radius: 8px; cursor:pointer;">
+        ✅ Gotowe
+      </button>
+
+      <button id="btn-back-sudoku" style="margin-top: 10px; background: transparent; border: none; color: #888; width: 100%; padding: 5px; cursor: pointer;">
+        ← Anuluj / Wróć
+      </button>
+    </div>
+
+    <div id="calib-step-brainrot" class="hidden">
+      <div style="font-size: 30px;">😵‍💫</div>
+      <h3>Brainrot Zone</h3>
+      
+      <div class="video-container">
+        <video 
+          id="brainrot-player" 
+          width="100%" 
+          height="100%" 
+          controls 
+          autoplay 
+          loop
+          style="object-fit: cover; border-radius: 12px;">
+          Twoja przeglądarka nie obsługuje wideo.
+        </video>
+      </div>
+
+      <button id="btn-next-video" style="background-color: #2196F3; width: 100%; padding: 10px; border: none; color: white; border-radius: 8px; margin-top: 10px; cursor:pointer;">
+        📺 Następny filmik
+      </button>
+      
+      <button id="btn-finish-brainrot" style="background-color: #607D8B; width: 100%; padding: 10px; border: none; color: white; border-radius: 8px; margin-top: 5px; cursor:pointer;">
+        ✅ Wystarczy
+      </button>
+    </div>
+
   </div>
 
   <script src="popup.js"></script>

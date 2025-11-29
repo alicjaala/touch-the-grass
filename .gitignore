@@ -18,6 +18,7 @@ venv/
 env/
 ENV/
 .env
+.venv
 
 # --- VS CODE ---
 .vscode/

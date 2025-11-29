@@ -1,7 +1,19 @@
 // extension/popup.js
+
 let socket = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 30000;
+
+let currentPuzzle = [];
+let currentSolution = [];
+
+
+const brainrotVideos = [
+    "videos/video1.mp4",
+    "videos/video2.mp4",
+    "videos/video3.mp4"
+];
+
 
 const elements = {
   textFocus: document.getElementById('text-focus'),
@@ -11,7 +23,26 @@ const elements = {
   statusIndicator: document.getElementById('status-indicator'),
   statusText: document.getElementById('status-text'),
   lastUpdate: document.getElementById('last-update'),
-  alertBox: document.getElementById('alert-box')
+  alertBox: document.getElementById('alert-box'),
+  
+  overlayCalibration: document.getElementById('overlay-calibration'),
+  stepMenu: document.getElementById('calib-step-menu'),
+  stepSudoku: document.getElementById('calib-step-sudoku'),
+  stepBrainrot: document.getElementById('calib-step-brainrot'),
+  
+  btnStartCalib: document.getElementById('btn-start-calib'), // Główny przycisk startu
+  btnChooseSudoku: document.getElementById('btn-choose-sudoku'),
+  btnChooseBrainrot: document.getElementById('btn-choose-brainrot'),
+  btnBackMain: document.getElementById('btn-back-main'),
+
+  sudokuBoard: document.getElementById('sudoku-board'),
+  btnFinishSudoku: document.getElementById('btn-finish-sudoku'),
+
+  btnBackSudoku: document.getElementById('btn-back-sudoku'),
+
+  brainrotPlayer: document.getElementById('brainrot-player'),
+  btnNextVideo: document.getElementById('btn-next-video'),
+  btnFinishBrainrot: document.getElementById('btn-finish-brainrot')
 };
 
 function connectToMonitor() {
@@ -55,25 +86,31 @@ function connectToMonitor() {
   }
 }
 
+function sendCommand(command, extraData = {}) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        const payload = {
+            command: command,
+            timestamp: Date.now(),
+            ...extraData
+        };
+        socket.send(JSON.stringify(payload));
+        console.log(`📤 Wysłano komendę: ${command}`, payload);
+    }
+}
+
+
+
 function updateUI(data) {
-  // Update focus
   elements.textFocus.innerText = data.focus + "%";
   elements.barFocus.style.width = data.focus + "%";
   
-  // Dynamic focus color based on level
-  if (data.focus > 70) {
-    elements.barFocus.style.background = "linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)";
-  } else if (data.focus > 40) {
-    elements.barFocus.style.background = "linear-gradient(90deg, #FFC107 0%, #FFD54F 100%)";
-  } else {
-    elements.barFocus.style.background = "linear-gradient(90deg, #FF9800 0%, #FFB74D 100%)";
-  }
+  if (data.focus > 70) elements.barFocus.style.background = "linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)";
+  else if (data.focus > 40) elements.barFocus.style.background = "linear-gradient(90deg, #FFC107 0%, #FFD54F 100%)";
+  else elements.barFocus.style.background = "linear-gradient(90deg, #FF9800 0%, #FFB74D 100%)";
   
-  // Update stress
   elements.textStress.innerText = data.stress + "%";
   elements.barStress.style.width = data.stress + "%";
   
-  // Dynamic stress color based on level
   if (data.stress > 80) {
     elements.barStress.style.background = "linear-gradient(90deg, #b71c1c 0%, #c62828 100%)";
     elements.barStress.style.boxShadow = "0 0 15px rgba(183, 28, 28, 0.8)";
@@ -82,24 +119,15 @@ function updateUI(data) {
     elements.barStress.style.boxShadow = "0 0 10px rgba(244, 67, 54, 0.5)";
   } else {
     elements.barStress.style.background = "linear-gradient(90deg, #FF9800 0%, #FFC107 100%)";
-    elements.barStress.style.boxShadow = "0 0 8px rgba(255, 152, 0, 0.4)";
+    elements.barStress.style.boxShadow = "none";
   }
   
-  // Show/hide alert
   const isCritical = (data.focus < 20) || (data.stress > 85);
   if (isCritical) {
     elements.alertBox.classList.add('show');
-    
-    if (data.focus < 20 && data.stress > 85) {
-      elements.alertBox.querySelector('.alert-text').innerText = 
-        "KRYZYS! Niskie skupienie i wysoki stres!";
-    } else if (data.focus < 20) {
-      elements.alertBox.querySelector('.alert-text').innerText = 
-        "Skupienie krytycznie niskie! Zrób przerwę!";
-    } else {
-      elements.alertBox.querySelector('.alert-text').innerText = 
-        "Poziom stresu krytyczny! Idź dotknij trawy!";
-    }
+    if (data.focus < 20 && data.stress > 85) elements.alertBox.querySelector('.alert-text').innerText = "KRYZYS! Niskie skupienie i wysoki stres!";
+    else if (data.focus < 20) elements.alertBox.querySelector('.alert-text').innerText = "Skupienie krytycznie niskie! Zrób przerwę!";
+    else elements.alertBox.querySelector('.alert-text').innerText = "Poziom stresu krytyczny! Idź dotknij trawy!";
   } else {
     elements.alertBox.classList.remove('show');
   }
@@ -112,29 +140,165 @@ function updateConnectionStatus(status, text) {
 
 function updateLastUpdateTime() {
   const now = new Date();
-  const timeString = now.toLocaleTimeString('pl-PL', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    second: '2-digit'
-  });
-  elements.lastUpdate.innerText = `Ostatnia aktualizacja: ${timeString}`;
+  elements.lastUpdate.innerText = `Ostatnia aktualizacja: ${now.toLocaleTimeString()}`;
 }
 
-chrome.storage.local.get(['lastBrainData', 'lastUpdate'], (result) => {
-  if (result.lastBrainData) {
-    updateUI(result.lastBrainData);
-    
-    if (result.lastUpdate) {
-      const lastUpdateDate = new Date(result.lastUpdate);
-      const timeString = lastUpdateDate.toLocaleTimeString('pl-PL', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      elements.lastUpdate.innerText = `Ostatnia aktualizacja: ${timeString}`;
-    }
-  }
+
+function showSection(sectionId) {
+    elements.stepMenu.classList.add('hidden');
+    elements.stepSudoku.classList.add('hidden');
+    elements.stepBrainrot.classList.add('hidden');
+
+    if (sectionId === 'menu') elements.stepMenu.classList.remove('hidden');
+    if (sectionId === 'sudoku') elements.stepSudoku.classList.remove('hidden');
+    if (sectionId === 'brainrot') elements.stepBrainrot.classList.remove('hidden');
+}
+
+elements.btnStartCalib.addEventListener('click', () => {
+    elements.overlayCalibration.classList.remove('hidden');
+    showSection('menu');
 });
+
+elements.btnBackMain.addEventListener('click', () => {
+    elements.overlayCalibration.classList.add('hidden');
+});
+
+
+
+elements.btnChooseSudoku.addEventListener('click', () => {
+    showSection('sudoku');
+    
+    elements.sudokuBoard.innerHTML = '<div style="color:#666; padding:30px; text-align:center;">Ładowanie Sudoku...</div>';
+
+    fetch('https://sudoku-api.vercel.app/api/dosuku')
+        .then(res => res.json())
+        .then(data => {
+            const rawGrid = data.newboard.grids[0];
+            currentPuzzle = rawGrid.value.flat();
+            currentSolution = rawGrid.solution.flat();
+            
+            renderSudoku(currentPuzzle);
+            
+            sendCommand("start_calibration", { mode: "sudoku" });
+        })
+        .catch(err => {
+            console.error("Błąd API Sudoku:", err);
+            useBackupSudoku();
+            sendCommand("start_calibration", { mode: "sudoku" });
+        });
+});
+
+function renderSudoku(puzzleData) {
+    elements.sudokuBoard.innerHTML = ''; 
+    puzzleData.forEach((num, index) => {
+        const input = document.createElement('input');
+        input.type = 'text'; 
+        input.className = 'sudoku-cell';
+        input.maxLength = 1;
+
+        if (num !== 0) {
+            input.value = num;
+            input.disabled = true;
+        }
+
+        input.addEventListener('input', (e) => {
+            if (!/^[1-9]$/.test(e.target.value)) e.target.value = '';
+        });
+
+        const row = Math.floor(index / 9);
+        if (row === 2 || row === 5) input.style.borderBottom = "2px solid #333";
+
+        elements.sudokuBoard.appendChild(input);
+    });
+}
+
+function useBackupSudoku() {
+    const backupPuzzle = [5,3,0,0,7,0,0,0,0,6,0,0,1,9,5,0,0,0,0,9,8,0,0,0,0,6,0,8,0,0,0,6,0,0,0,3,4,0,0,8,0,3,0,0,1,7,0,0,0,2,0,0,0,6,0,6,0,0,0,0,2,8,0,0,0,0,4,1,9,0,0,5,0,0,0,0,8,0,0,7,9];
+    const backupSolution = [5,3,4,6,7,8,9,1,2,6,7,2,1,9,5,3,4,8,1,9,8,3,4,2,5,6,7,8,5,9,7,6,1,4,2,3,4,2,6,8,5,3,7,9,1,7,1,3,9,2,4,8,5,6,9,6,1,5,3,7,2,8,4,2,8,7,4,1,9,6,3,5,3,4,5,2,8,6,1,7,9];
+    currentPuzzle = backupPuzzle;
+    currentSolution = backupSolution;
+    renderSudoku(currentPuzzle);
+}
+
+elements.btnFinishSudoku.addEventListener('click', () => {
+    const cells = document.querySelectorAll('.sudoku-cell');
+    let errors = 0;
+    let isComplete = true;
+
+    cells.forEach((cell, index) => {
+        const userValue = parseInt(cell.value);
+        const correctValue = currentSolution[index];
+
+        cell.style.backgroundColor = "white";
+        if (cell.disabled) cell.style.backgroundColor = "#f0f0f0";
+
+        if (!cell.value) {
+            isComplete = false;
+            return;
+        }
+
+        if (userValue !== correctValue) {
+            cell.style.backgroundColor = "#ffcdd2"; // Błąd
+            errors++;
+        } else if (!cell.disabled) {
+            cell.style.backgroundColor = "#c8e6c9"; // Dobrze
+        }
+    });
+
+    if (!isComplete) { alert("Uzupełnij wszystkie pola!"); return; }
+    if (errors > 0) { alert(`Masz ${errors} błędów!`); return; }
+
+    alert("BRAWO! Kalibracja zakończona sukcesem.");
+    finishCalibration();
+});
+
+elements.btnBackSudoku.addEventListener('click', () => {
+    showSection('menu'); 
+    
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ command: "stop_calibration" }));
+    }
+});
+
+
+
+elements.btnChooseBrainrot.addEventListener('click', () => {
+    showSection('brainrot');
+    loadRandomVideo();
+    
+    sendCommand("start_calibration", { mode: "brainrot" });
+});
+
+elements.btnNextVideo.addEventListener('click', () => {
+    loadRandomVideo();
+});
+
+elements.btnFinishBrainrot.addEventListener('click', () => {
+    finishCalibration();
+});
+
+
+
+function loadRandomVideo() {
+    const randomVideoFile = brainrotVideos[Math.floor(Math.random() * brainrotVideos.length)];
+    
+    console.log("Ładowanie lokalnego wideo:", randomVideoFile);
+    
+    elements.brainrotPlayer.src = randomVideoFile;
+    elements.brainrotPlayer.play().catch(e => console.log("Autoplay zablokowany, user musi kliknąć play", e));
+}
+
+
+function finishCalibration() {
+    elements.overlayCalibration.classList.add('hidden');
+    
+    elements.brainrotPlayer.pause();
+    elements.brainrotPlayer.src = ""; 
+
+    sendCommand("stop_calibration");
+}
+
+
 
 connectToMonitor();
 
