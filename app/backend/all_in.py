@@ -43,6 +43,7 @@ def calculate_metrics(window_data):
     theta = get_band_power(avg_data, SFREQ, 4, 8)
     alpha = get_band_power(avg_data, SFREQ, 8, 12)
     beta  = get_band_power(avg_data, SFREQ, 13, 30)
+    print(alpha, beta, theta)
 
     denom = theta + alpha
     focus_ratio = beta / denom if denom > 0 else 0
@@ -77,6 +78,7 @@ def main():
 
                 # Obliczenie metryk
                 focus_raw, beta_raw = calculate_metrics(window)
+                print("Jestem")
                 normalized_focus = np.clip(focus_raw * 50, 0, 100)
 
                 # Wykrywanie stresu (wysoka Beta)
