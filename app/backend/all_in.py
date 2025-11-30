@@ -71,8 +71,10 @@ def main():
                 focus_percent = min((normalized_focus - min_focus) / (max_focus - min_focus) * 100, 100)
                 stress_percent = min((stress_raw - min_stress) / (max_stress - min_stress) * 100, 100)
                 
+                # 4. Przetwarzanie (Logika)
                 result = {'focus_percent': focus_percent, 'stress_percent': stress_percent}
 
+                # 6. Wysyłka na frontend (Komunikacja)
                 transmitter.send_data(result)
 
                 # Log do konsoli

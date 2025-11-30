@@ -2,7 +2,7 @@ import asyncio
 import json
 import websockets
 from threading import Thread
-from transmitter import *
+
 
 class DataTransmitter:
     def __init__(self, host="localhost", port=8765):
@@ -38,7 +38,8 @@ class DataTransmitter:
         """Uruchamia serwer w oddzielnym wątku (non-blocking)"""
         new_loop = asyncio.new_event_loop()
         self.loop = new_loop
-        
+        async def main():
+
         def run_loop(loop):
             asyncio.set_event_loop(loop)
             start_server = websockets.serve(self._handler, self.host, self.port)
