@@ -4,21 +4,16 @@ let socket = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 30000;
 
-// Global variables
 let currentPuzzle = [];
 let currentSolution = [];
-let sudokuTimerInterval = null; // Variable for the time counter
+let sudokuTimerInterval = null; 
 
-// List of local video files
 const brainrotVideos = [
     "videos/video1.mp4",
     "videos/video2.mp4",
     "videos/video3.mp4"
 ];
-
-// Fetching elements from HTML
 const elements = {
-  // Main indicators
   textFocus: document.getElementById('text-focus'),
   barFocus: document.getElementById('bar-focus'),
   textStress: document.getElementById('text-stress'),
@@ -28,33 +23,26 @@ const elements = {
   lastUpdate: document.getElementById('last-update'),
   alertBox: document.getElementById('alert-box'),
   
-  // Overlay and views
   overlayCalibration: document.getElementById('overlay-calibration'),
   stepMenu: document.getElementById('calib-step-menu'),
   stepSudoku: document.getElementById('calib-step-sudoku'),
   stepBrainrot: document.getElementById('calib-step-brainrot'),
   
-  // Buttons
   btnStartCalib: document.getElementById('btn-start-calib'),
   btnChooseSudoku: document.getElementById('btn-choose-sudoku'),
   btnChooseBrainrot: document.getElementById('btn-choose-brainrot'),
   btnBackMain: document.getElementById('btn-back-main'),
 
-  // Sudoku elements
   sudokuBoard: document.getElementById('sudoku-board'),
   btnFinishSudoku: document.getElementById('btn-finish-sudoku'),
   btnBackSudoku: document.getElementById('btn-back-sudoku'),
   sudokuTimer: document.getElementById('sudoku-timer'), // Time counter in HTML
 
-  // Brainrot elements
   brainrotPlayer: document.getElementById('brainrot-player'),
   btnNextVideo: document.getElementById('btn-next-video'),
   btnFinishBrainrot: document.getElementById('btn-finish-brainrot')
 };
 
-// ============================================================
-// 1. WEBSOCKET LOGIC
-// ============================================================
 
 function connectToMonitor() {
   try {
@@ -107,9 +95,6 @@ function sendCommand(command, extraData = {}) {
     }
 }
 
-// ============================================================
-// 2. UI UPDATE
-// ============================================================
 
 function updateUI(data) {
   elements.textFocus.innerText = data.focus + "%";
@@ -154,9 +139,6 @@ function updateLastUpdateTime() {
   elements.lastUpdate.innerText = `Last update: ${now.toLocaleTimeString()}`;
 }
 
-// ============================================================
-// 3. NAVIGATION (SCREEN SWITCHING)
-// ============================================================
 
 function showSection(sectionId) {
     elements.stepMenu.classList.add('hidden');
@@ -168,20 +150,15 @@ function showSection(sectionId) {
     if (sectionId === 'brainrot') elements.stepBrainrot.classList.remove('hidden');
 }
 
-// Main "Start Calibration" button
 elements.btnStartCalib.addEventListener('click', () => {
     elements.overlayCalibration.classList.remove('hidden');
     showSection('menu');
 });
 
-// "Cancel" button in the menu
 elements.btnBackMain.addEventListener('click', () => {
     elements.overlayCalibration.classList.add('hidden');
 });
 
-// ============================================================
-// 4. SUDOKU & TIMER
-// ============================================================
 
 elements.btnChooseSudoku.addEventListener('click', () => {
     showSection('sudoku');
@@ -197,7 +174,6 @@ elements.btnChooseSudoku.addEventListener('click', () => {
             renderSudoku(currentPuzzle);
             sendCommand("start_calibration", { mode: "sudoku" });
             
-            // START TIMER
             startSudokuTimer();
         })
         .catch(err => {
@@ -205,7 +181,6 @@ elements.btnChooseSudoku.addEventListener('click', () => {
             useBackupSudoku();
             sendCommand("start_calibration", { mode: "sudoku" });
             
-            // START TIMER (even with backup)
             startSudokuTimer();
         });
 });
@@ -238,7 +213,6 @@ function useBackupSudoku() {
     renderSudoku(currentPuzzle);
 }
 
-// "Done" button in Sudoku
 elements.btnFinishSudoku.addEventListener('click', () => {
     const cells = document.querySelectorAll('.sudoku-cell');
     let errors = 0;
@@ -257,24 +231,21 @@ elements.btnFinishSudoku.addEventListener('click', () => {
     if (!isComplete) { alert("Fill in all fields!"); return; }
     if (errors > 0) { alert(`You have ${errors} errors!`); return; }
 
-    stopSudokuTimer(); // Stop the timer
+    stopSudokuTimer();
     alert("CONGRATS! Calibration finished successfully.");
     finishCalibration();
 });
 
-// "Go Back" button in Sudoku
 elements.btnBackSudoku.addEventListener('click', () => {
-    stopSudokuTimer(); // Stop the timer
+    stopSudokuTimer(); 
     showSection('menu'); 
     sendCommand("stop_calibration");
 });
 
-// --- TIMER FUNCTIONS ---
 
 function startSudokuTimer() {
-    let timeLeft = 60; // Time in seconds
+    let timeLeft = 60; 
     
-    // Visual reset
     if(elements.sudokuTimer) {
         elements.sudokuTimer.innerText = "01:00";
         elements.sudokuTimer.style.color = "#d32f2f"; 
@@ -307,9 +278,7 @@ function stopSudokuTimer() {
     }
 }
 
-// ============================================================
-// 5. BRAINROT LOGIC
-// ============================================================
+
 
 elements.btnChooseBrainrot.addEventListener('click', () => {
     showSection('brainrot');
@@ -329,13 +298,9 @@ function loadRandomVideo() {
     const randomVideoFile = brainrotVideos[Math.floor(Math.random() * brainrotVideos.length)];
     console.log("Loading local video:", randomVideoFile);
     elements.brainrotPlayer.src = randomVideoFile;
-    // Autoplay in popup
     elements.brainrotPlayer.play().catch(e => console.log("Autoplay blocked:", e));
 }
 
-// ============================================================
-// 6. COMMON FINISH AND START
-// ============================================================
 
 function finishCalibration() {
     elements.overlayCalibration.classList.add('hidden');
@@ -344,7 +309,6 @@ function finishCalibration() {
     sendCommand("stop_calibration");
 }
 
-// Initialization on start
 connectToMonitor();
 
 document.addEventListener('DOMContentLoaded', () => {
